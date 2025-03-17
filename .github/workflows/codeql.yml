@@ -1,0 +1,67 @@
+name: "CodeQL Analysis"
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+  schedule:
+    - cron: '0 0 * * 0'  # Runs weekly on Sundays at midnight
+
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'c-cpp' ]
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: ${{ matrix.language }}
+
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          gcc \
+          make \
+          libgd-dev \
+          libssl-dev \
+          unzip \
+          apache2 \
+          libapache2-mod-php \
+          php \
+          libperl-dev \
+          libpng-dev \
+          libjpeg-dev \
+          libdbi-dev \
+          libmcrypt-dev \
+          libnet-snmp-perl \
+          gettext \
+          libldap2-dev \
+          gawk \
+          dc \
+          build-essential \
+          snmp \
+          libnet-snmp-perl \
+          libmysqlclient-dev \
+          libpq-dev
+
+    - name: Configure Nagios Core
+      run: |
+        ./configure --with-command-group=nagcmd
+
+    - name: Build Nagios Core
+      run: |
+        make all
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
